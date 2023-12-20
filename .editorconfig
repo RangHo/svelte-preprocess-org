@@ -1,0 +1,15 @@
+# This is the top-level editorconfig
+root = true
+
+# General file conventions
+charset = utf-8
+trim_trailing_whitespace = true
+end_of_line = lf
+insert_final_newline = true
+max_line_length = 120
+
+# JavaScript and TypeScript files
+[*.{js,cjs,mjs,ts,cts,mts}]
+indent_style = space
+indent_size = 2
+
