@@ -73,7 +73,10 @@
 
 ;; Read the content of the Org-mode file from stdin and convert
 (with-temp-buffer
-  (insert-file-contents "/dev/stdin")
+  (while (condition-case err
+      (setq line (read-from-minibuffer ""))
+      (error nil))
+    (insert line "\n"))
   (org-svelte-export-as-svelte)
   (princ (buffer-string)))
 
