@@ -5,11 +5,22 @@ export interface OxSvelteOptions {
   latexEnvironmentFormat?: string;
   latexFragmentFormat?: string;
   srcBlockFormat?: string;
+  imports?: Record<string, string>;
+}
+
+function recordToAlist(target: Record<string, string>): string {
+  const entries = Object.entries(target);
+  const alist = entries.map(([key, val]) => `("${key}" . "${val}")`);
+  return `'(${alist})`;
 }
 
 export function convert(content: string, options?: OxSvelteOptions): string {
-  const { latexEnvironmentFormat, latexFragmentFormat, srcBlockFormat } =
-    options || {};
+  const {
+    latexEnvironmentFormat,
+    latexFragmentFormat,
+    srcBlockFormat,
+    imports,
+  } = options || {};
 
   let command = `/usr/bin/env emacs --script ${join(
     import.meta.dirname,
@@ -24,6 +35,11 @@ export function convert(content: string, options?: OxSvelteOptions): string {
   }
   if (srcBlockFormat) {
     command += ` --src-block-format ${srcBlockFormat}`;
+  }
+  if (imports) {
+    command += ` --preface "(setq og-svelte-component-import-alist ${recordToAlist(
+      imports,
+    )})"`;
   }
 
   return execSync(command, { input: content }).toString();
