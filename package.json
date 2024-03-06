@@ -30,5 +30,9 @@
     "svelte": "^4.2.12",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "ox-svelte": "^0.1.0",
+    "svelte": "^4.2.12"
   }
 }
