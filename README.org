@@ -1,9 +1,0 @@
-* Svelte Preprocessor for Org-mode Documents
-
-[[https:svelte.dev][Svelte]] preprocessor to import [[https:orgmode.org][Org mode]] documents as a component, powered by [[https:github.com/RangHo/ox-svelte][ox-svelte]].
-
-** Prerequisites
-
-This package deliberately refrains from parsing Org mode documents. These processes are delegated to an actual instance of Emacs.
-
-Therefore, you need *Emacs 29* or newer installed on your system.
