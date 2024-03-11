@@ -8,8 +8,10 @@
   "homepage": "https://github.com/RangHo/svelte-preprocess-org",
   "license": "GPL-3.0-or-later",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "rollup -c",
+    "test": "jest",
     "format": "prettier --write .",
     "lint": "eslint ."
   },
@@ -23,11 +25,13 @@
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "eslint": "^8.56.0",
+    "jest": "^29.7.0",
     "ox-svelte": "^0.1.0",
     "prettier": "^3.1.1",
     "rollup": "^4.12.0",
     "rollup-plugin-copy": "^3.5.0",
     "svelte": "^4.2.12",
+    "ts-jest": "^29.1.2",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"
   },
