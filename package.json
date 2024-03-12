@@ -21,8 +21,6 @@
     "@rollup/plugin-typescript": "^11.1.6",
     "@tsconfig/node-lts": "^20.1.1",
     "@types/node": "^20.11.19",
-    "@typescript-eslint/eslint-plugin": "^6.15.0",
-    "@typescript-eslint/parser": "^6.15.0",
     "eslint": "^8.56.0",
     "ox-svelte": "^0.1.0",
     "prettier": "^3.1.1",
@@ -30,7 +28,8 @@
     "rollup-plugin-copy": "^3.5.0",
     "svelte": "^4.2.12",
     "tslib": "^2.6.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^7.2.0"
   },
   "peerDependencies": {
     "ox-svelte": "^0.1.0",
