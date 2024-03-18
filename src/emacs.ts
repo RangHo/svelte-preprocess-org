@@ -43,5 +43,7 @@ export function convert(content: string, options?: OxSvelteOptions): string {
     command += ` --preface '${stringify(sexp).replaceAll("'", "'\\''")}'`;
   }
 
-  return execSync(command, { input: content }).toString();
+  const result = execSync(command, { input: content }).toString();
+
+  return result;
 }
