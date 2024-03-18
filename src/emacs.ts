@@ -30,13 +30,13 @@ export function convert(content: string, options?: OxSvelteOptions): string {
     )}'`;
   }
   if (latexFragmentFormat) {
-    command += ` --latex-fragment-format ${latexFragmentFormat.replaceAll(
+    command += ` --latex-fragment-format '${latexFragmentFormat.replaceAll(
       "'",
       "'\\''",
-    )}`;
+    )}'`;
   }
   if (srcBlockFormat) {
-    command += ` --src-block-format ${srcBlockFormat.replaceAll("'", "'\\''")}`;
+    command += ` --src-block-format '${srcBlockFormat.replaceAll("'", "'\\''")}'`;
   }
   if (imports) {
     const sexp = list(
