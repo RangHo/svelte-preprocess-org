@@ -1,17 +1,13 @@
 import { execSync } from "node:child_process";
 import { join } from "node:path";
 
+import { Atom, Quote, cons, list, stringify } from "./sexp.js";
+
 export interface OxSvelteOptions {
   latexEnvironmentFormat?: string;
   latexFragmentFormat?: string;
   srcBlockFormat?: string;
   imports?: Record<string, string>;
-}
-
-function recordToAlist(target: Record<string, string>): string {
-  const entries = Object.entries(target);
-  const alist = entries.map(([key, val]) => `("${key}" . "${val}")`);
-  return `'(${alist})`;
 }
 
 export function convert(content: string, options?: OxSvelteOptions): string {
@@ -37,9 +33,12 @@ export function convert(content: string, options?: OxSvelteOptions): string {
     command += ` --src-block-format ${srcBlockFormat}`;
   }
   if (imports) {
-    command += ` --preface "(setq og-svelte-component-import-alist ${recordToAlist(
-      imports,
-    )})"`;
+    const sexp = list(
+      new Atom("setq"),
+      new Atom("org-svelte-component-import-alist"),
+      new Quote(list(...Object.entries(imports).map(([key, val]) => cons(key, val)))),
+    );
+    command += ` --preface '${stringify(sexp).replaceAll("'", "'\\''")}'`;
   }
 
   return execSync(command, { input: content }).toString();

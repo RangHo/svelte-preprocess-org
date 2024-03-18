@@ -1,9 +1,20 @@
 {
   "extends": "@tsconfig/node-lts",
   "compilerOptions": {
-    "outDir": "./dist",
-    "declarationDir": "./dist",
+    "module": "node16",
     "rootDir": "./src",
-    "declaration": true
-  }
+    "outDir": "./dist",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "preserveSymlinks": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "declarationDir": "./dist"
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ]
 }
