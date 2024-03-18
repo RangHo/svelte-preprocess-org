@@ -36,7 +36,9 @@ export function convert(content: string, options?: OxSvelteOptions): string {
     const sexp = list(
       new Atom("setq"),
       new Atom("org-svelte-component-import-alist"),
-      new Quote(list(...Object.entries(imports).map(([key, val]) => cons(key, val)))),
+      new Quote(
+        list(...Object.entries(imports).map(([key, val]) => cons(key, val))),
+      ),
     );
     command += ` --preface '${stringify(sexp).replaceAll("'", "'\\''")}'`;
   }

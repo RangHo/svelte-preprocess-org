@@ -5,7 +5,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     },
     "preserveSymlinks": true,
     "emitDecoratorMetadata": true,
@@ -13,8 +13,5 @@
     "declaration": true,
     "declarationDir": "./dist"
   },
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
-  ]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

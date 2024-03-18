@@ -71,13 +71,13 @@ export function stringify(sexp: Sexp): string {
   if (isCell(sexp)) {
     return `(${stringifyList(sexp)})`;
   } else if (isNil(sexp)) {
-    return 'nil';
+    return "nil";
   } else if (isString(sexp)) {
     return `"${sexp}"`;
   } else if (isNumber(sexp)) {
     return sexp.toString();
   } else if (isBoolean(sexp)) {
-    return sexp ? 't' : 'nil';
+    return sexp ? "t" : "nil";
   } else if (sexp instanceof Atom) {
     return sexp.name;
   } else if (sexp instanceof Quote) {
@@ -89,7 +89,7 @@ export function stringify(sexp: Sexp): string {
 
 function stringifyList(list: Cell): string {
   // Stringify the car of the list
-  let result = '';
+  let result = "";
   if (isCell(list.car)) {
     result += `(${stringifyList(list.car)})`;
   } else {
