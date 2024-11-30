@@ -1,24 +1,45 @@
+/**
+ * An S-expression.
+ */
 export type Sexp = Value | Cell;
 
+/**
+ * A value in an S-expression.
+ */
 export type Value = Atom | Quote | string | number | boolean | null;
 
+/**
+ * A cons cell.
+ */
 export type Cell = {
   car: Sexp;
   cdr: Sexp;
 };
 
+/**
+ * An atom in an S-expression.
+ */
 export class Atom {
   constructor(public name: string) {}
 }
 
+/**
+ * A quoted S-expression.
+ */
 export class Quote {
   constructor(public sexp: Sexp) {}
 }
 
+/**
+ * Check if a value is a cons cell.
+ */
 function isCell(x: any): x is Cell {
   return x instanceof Object && "car" in x && "cdr" in x;
 }
 
+/**
+ * Check if a value is a valid value in an S-expression.
+ */
 function isValue(x: any): x is Value {
   return (
     x instanceof Atom ||
@@ -30,26 +51,46 @@ function isValue(x: any): x is Value {
   );
 }
 
+/**
+ * Check if a value is a nil value
+ */
 function isNil(x: any): x is null {
   return x === null;
 }
 
+/**
+ * Check if a value is a list.
+ *
+ * Note that improper lists are also considered lists.
+ */
 function isList(x: any): x is Cell {
   return isCell(x) || isNil(x);
 }
 
+/**
+ * Check if a value is a string.
+ */
 function isString(x: any): x is string {
   return typeof x === "string";
 }
 
+/**
+ * Check if a value is a number.
+ */
 function isNumber(x: any): x is number {
   return typeof x === "number";
 }
 
+/**
+ * Check if a value is a boolean.
+ */
 function isBoolean(x: any): x is boolean {
   return typeof x === "boolean";
 }
 
+/**
+  * Create a cons cell.
+ */
 export function cons(car: Sexp, cdr: Sexp): Cell {
   return {
     car,
@@ -57,6 +98,9 @@ export function cons(car: Sexp, cdr: Sexp): Cell {
   };
 }
 
+/**
+ * Create a list from a sequence of S-expressions.
+ */
 export function list(...args: Sexp[]): Sexp {
   if (args.length === 0) {
     return null;
@@ -66,8 +110,11 @@ export function list(...args: Sexp[]): Sexp {
   return cons(car, list(...rest));
 }
 
+/**
+ * Convert an S-expression to a string.
+ */
 export function stringify(sexp: Sexp): string {
-  // Dispatch based on the type of the expression
+  // Dispatch based on the type of the expression.
   if (isCell(sexp)) {
     return `(${stringifyList(sexp)})`;
   } else if (isNil(sexp)) {
@@ -87,8 +134,11 @@ export function stringify(sexp: Sexp): string {
   }
 }
 
+/**
+ * Convert a list to a string.
+ */
 function stringifyList(list: Cell): string {
-  // Stringify the car of the list
+  // Stringify the car of the list.
   let result = "";
   if (isCell(list.car)) {
     result += `(${stringifyList(list.car)})`;
