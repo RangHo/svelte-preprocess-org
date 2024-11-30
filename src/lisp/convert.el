@@ -35,7 +35,7 @@
 ;;; Code:
 
 (require 'ox-svelte
-         (expand-file-name "ox-svelte/ox-svelte.el"
+         (expand-file-name "ox-svelte.el"
                            (file-name-directory load-file-name)))
 
 ;; Set default settings

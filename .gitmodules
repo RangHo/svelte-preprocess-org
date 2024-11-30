@@ -1,3 +1,0 @@
-[submodule "src/lisp/ox-svelte"]
-	path = src/lisp/ox-svelte
-	url = https://github.com/RangHo/ox-svelte
