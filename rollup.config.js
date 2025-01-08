@@ -12,7 +12,10 @@ export default {
   },
   plugins: [
     copy({
-      targets: [{ src: "src/lisp", dest: "dist" }],
+      targets: [
+        // Copy the ox-svelte.el file to the dist directory.
+        { src: "node_modules/ox-svelte/ox-svelte.el", dest: "dist/" },
+      ],
     }),
     nodeResolve(),
     commonjs(),

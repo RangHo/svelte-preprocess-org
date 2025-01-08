@@ -19,42 +19,56 @@ export type Cell = {
 /**
  * An atom in an S-expression.
  */
-export class Atom {
-  constructor(public name: string) {}
-}
+export type Atom = {
+  name: string;
+};
 
 /**
  * A quoted S-expression.
  */
-export class Quote {
-  constructor(public sexp: Sexp) {}
-}
+export type Quote = {
+  sexp: Sexp;
+};
 
 /**
  * Check if a value is a cons cell.
  */
-function isCell(x: any): x is Cell {
+export function isCell(x: any): x is Cell {
   return x instanceof Object && "car" in x && "cdr" in x;
+}
+
+/**
+ * Check if a value is an atom.
+ */
+export function isAtom(x: any): x is Atom {
+  return x instanceof Object && "name" in x;
+}
+
+/**
+ * Check if a value is a quoted S-expression.
+ */
+export function isQuote(x: any): x is Quote {
+  return x instanceof Object && "sexp" in x;
 }
 
 /**
  * Check if a value is a valid value in an S-expression.
  */
-function isValue(x: any): x is Value {
+export function isValue(x: any): x is Value {
   return (
-    x instanceof Atom ||
-    x instanceof Quote ||
-    typeof x === "string" ||
-    typeof x === "number" ||
-    typeof x === "boolean" ||
-    x === null
+    isAtom(x) ||
+    isQuote(x) ||
+    isString(x) ||
+    isNumber(x) ||
+    isBoolean(x) ||
+    isNil(x)
   );
 }
 
 /**
  * Check if a value is a nil value
  */
-function isNil(x: any): x is null {
+export function isNil(x: any): x is null {
   return x === null;
 }
 
@@ -63,28 +77,28 @@ function isNil(x: any): x is null {
  *
  * Note that improper lists are also considered lists.
  */
-function isList(x: any): x is Cell {
+export function isList(x: any): x is Cell {
   return isCell(x) || isNil(x);
 }
 
 /**
  * Check if a value is a string.
  */
-function isString(x: any): x is string {
+export function isString(x: any): x is string {
   return typeof x === "string";
 }
 
 /**
  * Check if a value is a number.
  */
-function isNumber(x: any): x is number {
+export function isNumber(x: any): x is number {
   return typeof x === "number";
 }
 
 /**
  * Check if a value is a boolean.
  */
-function isBoolean(x: any): x is boolean {
+export function isBoolean(x: any): x is boolean {
   return typeof x === "boolean";
 }
 
@@ -92,10 +106,21 @@ function isBoolean(x: any): x is boolean {
   * Create a cons cell.
  */
 export function cons(car: Sexp, cdr: Sexp): Cell {
-  return {
-    car,
-    cdr,
-  };
+  return { car, cdr };
+}
+
+/**
+ * Create an atom from a tagged template string.
+ */
+export function a(raw: TemplateStringsArray, ...substitutions: any[]): Atom {
+  return { name: String.raw({ raw }, ...substitutions) };
+}
+
+/**
+ * Create a quoted S-expression.
+ */
+export function q(sexp: Sexp): Quote {
+  return { sexp };
 }
 
 /**
@@ -111,33 +136,43 @@ export function list(...args: Sexp[]): Sexp {
 }
 
 /**
+ * Create a function call.
+ *
+ * This is a shorthand for creating a list with the function name as the car.
+ */
+export function call(name: string, ...args: Sexp[]): Sexp {
+  return list(a`${name}`, ...args);
+}
+
+/**
  * Convert an S-expression to a string.
  */
 export function stringify(sexp: Sexp): string {
   // Dispatch based on the type of the expression.
-  if (isCell(sexp)) {
-    return `(${stringifyList(sexp)})`;
-  } else if (isNil(sexp)) {
-    return "nil";
-  } else if (isString(sexp)) {
-    return `"${sexp}"`;
-  } else if (isNumber(sexp)) {
-    return sexp.toString();
-  } else if (isBoolean(sexp)) {
-    return sexp ? "t" : "nil";
-  } else if (sexp instanceof Atom) {
-    return sexp.name;
-  } else if (sexp instanceof Quote) {
-    return `'${stringify(sexp.sexp)}`;
-  } else {
-    throw new TypeError(`Unknown type of S-expression: ${typeof sexp}`);
+  switch (true) {
+    case isCell(sexp):
+      return `(${stringifyList(sexp)})`;
+    case isNil(sexp):
+      return "nil";
+    case isString(sexp):
+      return `"${sexp}"`;
+    case isNumber(sexp):
+      return sexp.toString();
+    case isBoolean(sexp):
+      return sexp ? "t" : "nil";
+    case isAtom(sexp):
+      return sexp.name;
+    case isQuote(sexp):
+      return `'${stringify(sexp.sexp)}`;
+    default:
+      throw new TypeError(`Unknown type of S-expression: ${typeof sexp}`);
   }
 }
 
 /**
  * Convert a list to a string.
  */
-function stringifyList(list: Cell): string {
+export function stringifyList(list: Cell): string {
   // Stringify the car of the list.
   let result = "";
   if (isCell(list.car)) {
