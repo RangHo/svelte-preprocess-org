@@ -12,11 +12,11 @@
   "scripts": {
     "build": "tsdown",
     "build:watch": "tsdown --watch",
-    "test": "node --test src/**/*.test.ts",
+    "test": "node --import tsx --test src/**/*.test.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "eslint . --fix",
+    "lint:check": "eslint ."
   },
   "dependencies": {
     "ox-svelte": "0.4.1",
@@ -29,9 +29,9 @@
     "prettier": "^3.6.2",
     "svelte": "^5.37.2",
     "tsdown": "^0.13.3",
+    "tsx": "^4.20.3",
     "typescript": "5.8",
-    "typescript-eslint": "^8.38.0",
-    "vitest": "^3.2.4"
+    "typescript-eslint": "^8.38.0"
   },
   "peerDependencies": {
     "svelte": "^5.2.11"
