@@ -1,38 +1,16 @@
 {
-  "name": "svelte-preprocess-org",
-  "type": "module",
-  "version": "0.2.4",
-  "description": "Svelte preprocessor for Org-mode",
-  "author": "RangHo Lee <hello@rangho.me>",
-  "homepage": "https://github.com/RangHo/svelte-preprocess-org",
-  "license": "GPL-3.0-or-later",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": "dist/*",
+  "name": "@svelte-preprocess-org/monorepo",
+  "private": true,
   "scripts": {
-    "build": "tsdown",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "format": "pnpm -r format"
   },
-  "dependencies": {
-    "ox-svelte": "0.4.1",
-    "tinyglobby": "^0.2.14"
+  "engines": {
+    "pnpm": ">=9.6.0"
   },
-  "devDependencies": {
-    "@tsconfig/node-lts": "^22.0.2",
-    "@types/node": "^22.17.0",
-    "eslint": "^9.32.0",
-    "prettier": "^3.6.2",
-    "svelte": "^5.37.2",
-    "tsdown": "^0.13.3",
-    "typescript": "5.8",
-    "typescript-eslint": "^8.38.0",
-    "vitest": "^3.2.4"
-  },
-  "peerDependencies": {
-    "svelte": "^5.2.11"
-  },
-  "packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab"
+  "packageManager": "pnpm@10.6.4",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
 }

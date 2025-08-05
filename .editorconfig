@@ -9,7 +9,7 @@ insert_final_newline = true
 max_line_length = 120
 
 # JavaScript and TypeScript files
-[*.{js,cjs,mjs,ts,cts,mts}]
+[*.{js,cjs,mjs,ts,cts,mts,svelte}]
 indent_style = space
 indent_size = 2
 
