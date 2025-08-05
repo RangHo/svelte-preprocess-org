@@ -132,8 +132,14 @@ export function cons(car: Sexp, cdr: Sexp): Cell {
 /**
  * Create a quoted S-expression.
  */
-export function quote(sexp: Sexp): Quote {
-  return { quote: sexp };
+export function quote(sexp: Sexp): Quote | Keyword {
+  if (isKeyword(sexp)) {
+    // A quoted keyword is still a keyword.
+    return k`${sexp.keyword}`;
+  } else {
+    // For the rest, just quote the S-expression.
+    return { quote: sexp };
+  }
 }
 
 /**
