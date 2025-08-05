@@ -1,9 +1,13 @@
-import eslint from "@eslint/js";
-import tslint from "typescript-eslint";
+import js from "@eslint/js";
+import ts from "typescript-eslint";
 
-const config = tslint.config(
-  eslint.configs.recommended,
-  ...tslint.configs.recommended,
+/** @type { import("eslint").Linter.Config[] } */
+const config = ts.config(
+  {
+    ignores: ["dist", "node_modules"],
+  },
+  js.configs.recommended,
+  ts.configs.recommended,
 );
 
 export default config;
