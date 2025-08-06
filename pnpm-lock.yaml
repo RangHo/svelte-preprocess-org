@@ -68,9 +68,6 @@ importers:
 
   packages/svelte-preprocess-org:
     dependencies:
-      ox-svelte:
-        specifier: 0.4.1
-        version: 0.4.1
       tinyglobby:
         specifier: ^0.2.14
         version: 0.2.14
@@ -84,6 +81,9 @@ importers:
       eslint:
         specifier: ^9.32.0
         version: 9.32.0(jiti@2.5.1)
+      ox-svelte:
+        specifier: 0.4.2
+        version: 0.4.2
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -1100,8 +1100,8 @@ packages:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
 
-  ox-svelte@0.4.1:
-    resolution: {integrity: sha512-PXR1LjtM+pm3UOi9wQ9OYHwdjNGvrmNe+xNvz+Fe/TilUy8FR5MScpkW+Nd9Hl9PRcv2Cqg/0+SAsRbkLhAIaQ==}
+  ox-svelte@0.4.2:
+    resolution: {integrity: sha512-I+uYownszi+HE1UYf8lTOVMvfUTDYh6WP0vMLza1rLwT8wW0CeXfVUUJc+WUGqmHJGBtAzIvL+SRkCZoDjoldw==}
 
   p-limit@3.1.0:
     resolution: {integrity: sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==}
@@ -2336,7 +2336,7 @@ snapshots:
       type-check: 0.4.0
       word-wrap: 1.2.5
 
-  ox-svelte@0.4.1: {}
+  ox-svelte@0.4.2: {}
 
   p-limit@3.1.0:
     dependencies:
