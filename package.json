@@ -1,16 +1,32 @@
 {
-  "name": "@svelte-preprocess-org/monorepo",
   "private": true,
+  "name": "@svelte-preprocess-org/monorepo",
+  "version": "0.0.0",
   "scripts": {
-    "format": "pnpm -r format"
+    "format": "pnpm -r format",
+    "test": "pnpm -r test"
   },
-  "engines": {
-    "pnpm": ">=9.6.0"
+  "devDependencies": {
+    "@eslint/compat": "^1.2.5",
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.33.0",
+    "prettier": "^3.6.2",
+    "tsdown": "^0.14.1",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.20.0",
+    "vite": "^7.1.3",
+    "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@10.6.4",
+  "engines": {
+    "pnpm": "^10.6.4"
+  },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
+    "overrides": {
+      "ox-svelte": "link:../ox-svelte"
+    }
+  },
+  "dependencies": {
+    "ox-svelte": "link:../ox-svelte"
   }
 }

@@ -1,4 +1,7 @@
-import { evaluate, a, k, cons, list, quote, type Value } from "./emacs.js";
+import { join } from "node:path";
+import { dirname, basename } from "ox-svelte";
+
+import { a, k, cons, list, quote, type Value } from "./emacs.js";
 import { toKebabCase } from "./utilities.js";
 
 /**
@@ -25,22 +28,18 @@ export type OrgSvelteCustomization = Partial<{
   verbose: boolean;
 }>;
 
-/**
- * Export an Org document as Svelte code.
- *
- * @param content The content of the Org-mode document.
- * @param options Customization options for the export.
- * @returns The generated Svelte component as a string.
- */
-export function exportAsSvelte(
-  content: string,
-  options?: OrgSvelteCustomization,
-) {
-  options = options || {};
+export function require() {
+  return list(
+    a`require`,
+    quote(a`ox-svelte`),
+    list(a`expand-file-name`, basename, dirname),
+  );
+}
 
-  const transformedOptions = Object.entries(options).map(([key, val]) => {
+export function customize(options: OrgSvelteCustomization = {}) {
+  const transformed = Object.entries(options).map(([key, val]) => {
     switch (key) {
-      case "componentImportAlist":
+      case "componentImportAlist": {
         const cia = val as Record<string, string | string[] | null>;
         return list(
           a`setq`,
@@ -55,16 +54,18 @@ export function exportAsSvelte(
             }),
           ),
         );
+      }
 
-      case "metadataExportList":
+      case "metadataExportList": {
         const mel = val as string[];
         return list(
           a`setq`,
           a`org-svelte-metadata-export-list`,
           list(...mel.map((v) => k`${v}`)),
         );
+      }
 
-      case "textMarkupAlist":
+      case "textMarkupAlist": {
         const tma = val as Record<
           | "bold"
           | "code"
@@ -79,23 +80,40 @@ export function exportAsSvelte(
           a`org-svelte-text-markup-alist`,
           list(...Object.entries(tma).map(([key, val]) => cons(key, val))),
         );
+      }
+
+      case "anchorFormat":
+      case "brokenLinkFormat":
+      case "imageFormat":
+      case "latexEnviromnetFormat":
+      case "latexDisplayFragmentFormat":
+      case "latexInlineFragmentFormat":
+      case "linkOrgFileAsSvelte":
+      case "rawScriptContent":
+      case "srcBlockFormat":
+      case "verbose":
+        return list(a`setq`, a`org-svelte-${toKebabCase(key)}`, val as Value);
 
       default:
-        return list(a`setq`, a`org-svelte-${toKebabCase(key)}`, val as Value);
+        return null;
     }
   });
 
-  // Build the `progn` form.
-  const sexp = list(
+  return transformed;
+}
+
+/**
+ * Export an Org document as Svelte code.
+ *
+ * @param content The content of the Org-mode document.
+ * @param options Customization options for the export.
+ * @returns The generated Svelte component as a string.
+ */
+export function exportAsSvelte(options?: OrgSvelteCustomization) {
+  options = options || {};
+
+  return list(
     a`progn`,
-    // Import `ox-svelte`.
-    list(
-      a`require`,
-      quote(a`ox-svelte`),
-      list(a`expand-file-name`, `ox-svelte.el`, import.meta.dirname),
-    ),
-    // Include the transformed export options.
-    ...transformedOptions,
     // Read the content of the Org document from stdin.
     list(a`setq`, a`content`, ``),
     list(
@@ -118,8 +136,4 @@ export function exportAsSvelte(
       list(a`princ`, list(a`buffer-string`)),
     ),
   );
-
-  // Evaluate with Emacs.
-  const result = evaluate(sexp, content);
-  return result;
 }

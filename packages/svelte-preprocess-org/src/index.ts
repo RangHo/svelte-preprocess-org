@@ -1,10 +1,18 @@
-import { glob } from "tinyglobby";
+import { glob } from "node:fs";
 import type { PreprocessorGroup } from "svelte/compiler";
+import fullpath from "ox-svelte";
 
-import { startup } from "./emacs";
-import { type OrgExportCustomization } from "./org-export";
-import { updateIdLocations } from "./org-id";
-import { exportAsSvelte, type OrgSvelteCustomization } from "./org-svelte";
+import { Emacs } from "./emacs";
+import {
+  customize as customizeOx,
+  type OrgExportCustomization,
+} from "./org-export.js";
+import { updateIdLocations } from "./org-id.js";
+import {
+  customize as customizeOxSvelte,
+  exportAsSvelte,
+  type OrgSvelteCustomization,
+} from "./org-svelte.js";
 
 export type OrgPreprocessOptions = Partial<{
   extensions: string[];
@@ -13,7 +21,10 @@ export type OrgPreprocessOptions = Partial<{
   OrgExportCustomization &
   OrgSvelteCustomization;
 
-let initPromise: Promise<string> | null = null;
+/**
+ *
+ */
+let initPromise: Promise<unknown> | undefined;
 
 /**
  * Preprocess Org documents to Svelte components.
@@ -23,11 +34,14 @@ export function orgPreprocess(
 ): PreprocessorGroup {
   const { extensions = [".org"], idLocations = [], ...rest } = options || {};
 
-  // Initialize Emacs daemon.
+  const emacs = new Emacs();
+
+  // Initialization has not been run yet.
   if (!initPromise) {
-    initPromise = startup()
-      .then(() => glob(idLocations))
-      .then((files) => updateIdLocations(files));
+    initPromise = emacs
+      .require("org")
+      .progn(updateIdLocations(idLocations))
+      .run();
   }
 
   return {
@@ -37,12 +51,17 @@ export function orgPreprocess(
         return { code: content };
       }
 
-      // Make sure the prerequisites are met.
-      await initPromise;
+      const code = await emacs
+        .require("ox-svelte", fullpath)
+        .progn(...customizeOx(rest), ...customizeOxSvelte(rest))
+        .progn(exportAsSvelte(rest))
+        .minibuffer(content)
+        .run();
 
-      return {
-        code: await exportAsSvelte(content, rest),
-      };
+      console.log("Filename", filename);
+      console.log("Transformed:", code);
+
+      return { code };
     },
   };
 }

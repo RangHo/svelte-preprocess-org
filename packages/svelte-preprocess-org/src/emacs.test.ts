@@ -1,61 +1,59 @@
-import { strict as assert } from "node:assert";
-import { test } from "node:test";
+import { describe, it, expect, vi } from "vitest";
 
-import { a, k, cons, quote, list, stringify } from "./emacs";
+import { a, k, cons, quote, list, stringify } from "./emacs.js";
 
-test("Emacs Lisp S-expression DSL", async (t) => {
-  await t.test("creates correct list", () => {
+describe.concurrent("Emacs Lisp S-expression DSL", async () => {
+  it("creates correct list", () => {
     const listA = list(`a`, `b`, `c`);
     const listB = cons(`a`, cons(`b`, cons(`c`, null)));
 
-    assert.deepEqual(listA, listB);
+    expect(listA).toEqual(listB);
   });
 
-  await t.test("stringifies null as nil", () => {
-    assert.equal(stringify(null), "nil");
+  it("stringifies null as nil", () => {
+    expect(stringify(null)).toBe("nil");
   });
 
-  await t.test("stringifies boolean correctly", () => {
-    assert.equal(stringify(true), "t");
-    assert.equal(stringify(false), "nil");
+  it("stringifies boolean", () => {
+    expect(stringify(true)).toBe("t");
+    expect(stringify(false)).toBe("nil");
   });
 
-  await t.test("stringifies atom correctly", () => {
-    assert.equal(stringify(a`a`), "a");
+  it("stringifies atom", () => {
+    expect(stringify(a`a`)).toBe("a");
   });
 
-  await t.test("stringifies keyword correctly", () => {
-    assert.equal(stringify(k`a`), ":a");
+  it("stringifies keyword", () => {
+    expect(stringify(k`a`)).toBe(":a");
   });
 
-  await t.test("stringifies cons cell correctly", () => {
-    assert.equal(stringify(cons(`a`, `b`)), '("a" . "b")');
+  it("stringifies cons cell", () => {
+    expect(stringify(cons(`a`, `b`))).toBe('("a" . "b")');
   });
 
-  await t.test("stringifies list correctly", () => {
-    assert.equal(stringify(list(`a`, `b`, `c`)), '("a" "b" "c")');
+  it("stringifies list", () => {
+    expect(stringify(list(`a`, `b`, `c`))).toBe('("a" "b" "c")');
   });
 
-  await t.test("stringifies list with trailing cons cell correctly", () => {
-    assert.equal(stringify(cons(`a`, cons(`b`, `c`))), '("a" "b" . "c")');
+  it("stringifies list with trailing cons cell", () => {
+    expect(stringify(cons(`a`, cons(`b`, `c`)))).toBe('("a" "b" . "c")');
   });
 
-  await t.test("stringifies list with nested lists correctly", () => {
-    assert.equal(
-      stringify(list(`a`, list(`b`, `c`, `d`), `e`)),
+  it("stringifies list with nested lists", () => {
+    expect(stringify(list(`a`, list(`b`, `c`, `d`), `e`))).toBe(
       '("a" ("b" "c" "d") "e")',
     );
   });
 
-  await t.test("stringifies quoted atom correctly", () => {
-    assert.equal(stringify(quote(a`a`)), `'a`);
+  it("stringifies quoted atom", () => {
+    expect(stringify(quote(a`a`))).toBe(`'a`);
   });
 
-  await t.test("stringifies quoted keyword correctly", () => {
-    assert.equal(stringify(quote(k`a`)), ":a");
+  it("stringifies quoted keyword", () => {
+    expect(stringify(quote(k`a`))).toBe(":a");
   });
 
-  await t.test("stringifies quoted list correctly", () => {
-    assert.equal(stringify(quote(list(`a`, `b`, `c`))), `'("a" "b" "c")`);
+  it("stringifies quoted list", () => {
+    expect(stringify(quote(list(`a`, `b`, `c`)))).toBe(`'("a" "b" "c")`);
   });
 });
