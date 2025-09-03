@@ -273,7 +273,7 @@ export class Emacs {
     this.sexps.push(
       filename
         ? list(a`require`, quote(a`${feature}`), filename)
-        : list(a`require`, quote(a`${feature}`))
+        : list(a`require`, quote(a`${feature}`)),
     );
 
     return this;
@@ -314,7 +314,7 @@ export class Emacs {
 
     // Spawn Emacs in batch mode to evaluate the S-expressions.
     const child = spawn("emacs", [
-      `--init-directory=${this.initDirectory}`,
+      `--init-directory=${await this.initDirectory}`,
       "--batch",
       "--eval",
       stringify(list(a`progn`, ...this.sexps)),
