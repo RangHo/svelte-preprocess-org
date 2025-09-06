@@ -321,7 +321,7 @@ export class Emacs {
     ]);
 
     // Pipe stdin to child.
-    if (this.stdin.length === 0) {
+    if (this.stdin.length > 0) {
       child.stdin.write(this.stdin);
     }
     child.stdin.end();
