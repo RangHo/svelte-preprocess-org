@@ -1,4 +1,4 @@
-import { Emacs, a, list, quote, type Atom } from "./emacs.js";
+import { Emacs, a, list, quote, type Atom } from "./emacs";
 
 /**
  * Customization options for Org export engine.
@@ -41,5 +41,5 @@ export type OrgExportCustomization = Partial<{
 }>;
 
 export function customize(options: OrgExportCustomization = {}) {
-  return [];
+  return list();
 }

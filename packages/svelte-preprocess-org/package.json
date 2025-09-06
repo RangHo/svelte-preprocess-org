@@ -28,5 +28,8 @@
   "peerDependencies": {
     "ox-svelte": "catalog:",
     "svelte": "catalog:"
+  },
+  "dependencies": {
+    "tinyglobby": "^0.2.14"
   }
 }

@@ -1,22 +1,22 @@
-import { glob } from "node:fs";
-import type { PreprocessorGroup } from "svelte/compiler";
 import fullpath from "ox-svelte";
+import type { PreprocessorGroup } from "svelte/compiler";
+import { glob } from "tinyglobby";
 
-import { Emacs } from "./emacs";
+import { list, quote, a, Emacs, type Sexp } from "./emacs";
 import {
   customize as customizeOx,
   type OrgExportCustomization,
-} from "./org-export.js";
-import { updateIdLocations } from "./org-id.js";
+} from "./org-export";
 import {
   customize as customizeOxSvelte,
-  exportAsSvelte,
+  exportMinibufferAsSvelte,
   type OrgSvelteCustomization,
-} from "./org-svelte.js";
+} from "./org-svelte";
 
 export type OrgPreprocessOptions = Partial<{
   extensions: string[];
   idLocations: string[];
+  initSexps: Sexp[];
 }> &
   OrgExportCustomization &
   OrgSvelteCustomization;
@@ -32,16 +32,34 @@ let initPromise: Promise<unknown> | undefined;
 export function orgPreprocess(
   options?: OrgPreprocessOptions,
 ): PreprocessorGroup {
-  const { extensions = [".org"], idLocations = [], ...rest } = options || {};
+  const {
+    extensions = [".org"],
+    idLocations = [],
+    initSexps = [],
+    ...rest
+  } = options || {};
 
   const emacs = new Emacs();
 
   // Initialization has not been run yet.
   if (!initPromise) {
-    initPromise = emacs
-      .require("org")
-      .progn(updateIdLocations(idLocations))
-      .run();
+    initPromise = (async () => {
+      // Run extra initialization S-expressions if provided.
+      if (initSexps.length > 0) {
+        await emacs.progn(...initSexps).run();
+      }
+
+      // Update Org-mode ID locations if provided.
+      if (idLocations.length > 0) {
+        const files = await glob(idLocations, { absolute: true });
+        if (files.length > 0) {
+          await emacs
+            .require("org")
+            .progn(list(a`org-id-update-id-locations`, quote(list(...files))))
+            .run();
+        }
+      }
+    })();
   }
 
   return {
@@ -51,16 +69,16 @@ export function orgPreprocess(
         return { code: content };
       }
 
+      // Make sure that ID location updates have been applied.
+      await initPromise;
+
       const code = await emacs
         .require("ox-svelte", fullpath)
-        .progn(...customizeOx(rest), ...customizeOxSvelte(rest))
-        .progn(exportAsSvelte(rest))
+        .progn(customizeOx(rest))
+        .progn(customizeOxSvelte(rest))
+        .progn(exportMinibufferAsSvelte)
         .minibuffer(content)
         .run();
-
-      console.log("Filename", filename);
-      console.log("Transformed:", code);
-
       return { code };
     },
   };

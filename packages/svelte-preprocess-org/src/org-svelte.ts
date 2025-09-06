@@ -1,8 +1,7 @@
-import { join } from "node:path";
 import { dirname, basename } from "ox-svelte";
 
-import { a, k, cons, list, quote, type Value } from "./emacs.js";
-import { toKebabCase } from "./utilities.js";
+import { a, k, cons, list, quote, type Value } from "./emacs";
+import { toKebabCase } from "./utilities";
 
 /**
  * Customization options for exporting Org documents as Svelte components.
@@ -27,14 +26,6 @@ export type OrgSvelteCustomization = Partial<{
   >;
   verbose: boolean;
 }>;
-
-export function require() {
-  return list(
-    a`require`,
-    quote(a`ox-svelte`),
-    list(a`expand-file-name`, basename, dirname),
-  );
-}
 
 export function customize(options: OrgSvelteCustomization = {}) {
   const transformed = Object.entries(options).map(([key, val]) => {
@@ -99,41 +90,36 @@ export function customize(options: OrgSvelteCustomization = {}) {
     }
   });
 
-  return transformed;
+  return list(a`progn`, ...transformed);
 }
 
 /**
  * Export an Org document as Svelte code.
  *
- * @param content The content of the Org-mode document.
+ * Note: This function expects the content of the Org document to be provided
+ * via minibuffer input (i.e., stdin).
+ *
  * @param options Customization options for the export.
  * @returns The generated Svelte component as a string.
  */
-export function exportAsSvelte(options?: OrgSvelteCustomization) {
-  options = options || {};
-
-  return list(
-    a`progn`,
-    // Read the content of the Org document from stdin.
-    list(a`setq`, a`content`, ``),
-    list(
-      a`while`,
-      // TEST
-      list(
-        a`setq`,
-        a`line`,
-        list(a`ignore-errors`, list(a`read-from-minibuffer`, ``)),
-      ),
-      // BODY
-      list(a`setq`, a`content`, list(a`concat`, a`content`, `\\n`, a`line`)),
-    ),
-    // Create temporary buffer, insert, and export.
-    list(
-      a`with-temp-buffer`,
-      list(a`org-mode`),
-      list(a`insert`, a`content`),
-      list(a`org-svelte-export-as-svelte`),
-      list(a`princ`, list(a`buffer-string`)),
-    ),
-  );
-}
+export const exportMinibufferAsSvelte = list(
+  a`let`,
+  // VARLIST
+  list(list(a`content`, ``)),
+  // BODY
+  list(
+    a`while`,
+    // TEST
+    list(a`setq`, a`line`, list(a`ignore-errors`, list(a`read-string`, ``))),
+    // BODY
+    list(a`setq`, a`content`, list(a`concat`, a`content`, `\\n`, a`line`)),
+  ),
+  // Create temporary buffer, insert, and export.
+  list(
+    a`with-temp-buffer`,
+    list(a`org-mode`),
+    list(a`insert`, a`content`),
+    list(a`org-svelte-export-as-svelte`),
+    list(a`princ`, list(a`buffer-string`)),
+  ),
+);
