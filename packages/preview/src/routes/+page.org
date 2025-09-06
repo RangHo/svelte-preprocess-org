@@ -1,0 +1,4 @@
+#+options: num:nil
+
+* Welcome to SvelteKit
+Visit [[https://svelte.dev/docs/kit][svelte.dev/docs/kit]] to read the documentation

@@ -1,7 +1,7 @@
 {
-  "name": "@svelte-preprocess-org/preview",
   "private": true,
-  "version": "0.0.1",
+  "name": "@svelte-preprocess-org/preview",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
@@ -23,6 +23,7 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-svelte": "^3.0.0",
     "globals": "^16.0.0",
+    "ox-svelte": "catalog:",
     "prettier": "^3.4.2",
     "prettier-plugin-svelte": "^3.3.3",
     "svelte": "^5.0.0",

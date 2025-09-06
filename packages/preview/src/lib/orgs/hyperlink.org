@@ -1,0 +1,5 @@
+#+title: Hyperlink example
+
+[[id:632bcc21-88cc-453d-8942-844db524a584][Lorem ipsum]]
+
+[[id:4aa26c67-946f-4c9f-b8b7-26a219ec505e][Li Europan lingues]]

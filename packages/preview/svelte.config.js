@@ -4,8 +4,19 @@ import { orgPreprocess } from "svelte-preprocess-org";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  preprocess: [vitePreprocess(), orgPreprocess()],
-
+  preprocess: [
+    orgPreprocess({
+      anchorFormat: "<Link href=%s>%s</Link>",
+      componentImportAlist: {
+        "$lib/components/link.svelte": "Link",
+      },
+      extensions: [".org"],
+      idLocations: ["src/lib/orgs/*.org"],
+      verbose: true,
+    }),
+    vitePreprocess(),
+  ],
+  extensions: [".svelte", ".org"],
   kit: {
     adapter: adapter(),
   },
