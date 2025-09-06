@@ -238,11 +238,6 @@ function stringifyList(list: Cell): string {
  */
 export class Emacs {
   /**
-   * Directory that will be used as the `user-emacs-directory`.
-   */
-  private initDirectory: string;
-
-  /**
    * S-expression to evaluate when `run` method is called.
    */
   private sexps: Sexp[] = [];
@@ -257,9 +252,10 @@ export class Emacs {
    *
    * Internally, this will request a temporary directory to be created, which
    * will be used as the Emacs init directory when `Emacs.run` is called.
+   *
+    * @param initDirectory - Directory that will be used as the `user-emacs-directory`.
    */
-  constructor() {
-    this.initDirectory = mkdtempSync(join(tmpdir(), "svelte-preprocess-org-"));
+  constructor(private initDirectory: string) {
     this.stdin = "";
   }
 
