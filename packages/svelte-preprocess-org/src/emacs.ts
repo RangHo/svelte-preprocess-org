@@ -1,5 +1,5 @@
-import { spawn } from "node:child_process";
-import { mkdtemp } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -240,7 +240,7 @@ export class Emacs {
   /**
    * Directory that will be used as the `user-emacs-directory`.
    */
-  private initDirectory: Promise<string>;
+  private initDirectory: string;
 
   /**
    * S-expression to evaluate when `run` method is called.
@@ -259,7 +259,7 @@ export class Emacs {
    * will be used as the Emacs init directory when `Emacs.run` is called.
    */
   constructor() {
-    this.initDirectory = mkdtemp(join(tmpdir(), "svelte-preprocess-org-"));
+    this.initDirectory = mkdtempSync(join(tmpdir(), "svelte-preprocess-org-"));
     this.stdin = "";
   }
 
@@ -308,40 +308,22 @@ export class Emacs {
    *
    * @rehturns The standard output of the Emacs process.
    */
-  async run() {
-    let stdout = "";
-    let stderr = "";
-
+  run() {
     // Spawn Emacs in batch mode to evaluate the S-expressions.
-    const child = spawn("emacs", [
-      `--init-directory=${await this.initDirectory}`,
-      "--batch",
-      "--eval",
-      stringify(list(a`progn`, ...this.sexps)),
-    ]);
-
-    // Pipe stdin to child.
-    if (this.stdin.length > 0) {
-      child.stdin.write(this.stdin);
-    }
-    child.stdin.end();
-
-    // Get data from child.
-    for await (const chunk of child.stdout) {
-      stdout += chunk.toString();
-    }
-    for await (const chunk of child.stderr) {
-      stderr += chunk.toString();
-    }
-
-    // Wait for the child to exit.
-    const exitCode = await new Promise<number>((resolve) => {
-      child.on("exit", resolve);
-    });
-    if (exitCode !== 0) {
-      throw new Error(
-        `Emacs evaluation failed with exit code ${exitCode}\n${stderr}`,
-      );
+    const { stdout, stderr, error } = spawnSync(
+      "emacs",
+      [
+        `--init-directory=${this.initDirectory}`,
+        "--batch",
+        "--eval",
+        stringify(list(a`progn`, ...this.sexps)),
+      ],
+      {
+        input: this.stdin,
+      },
+    );
+    if (error) {
+      throw error;
     }
 
     // Reset the S-expressions and stdin for the next run.
@@ -349,6 +331,6 @@ export class Emacs {
     this.stdin = "";
 
     // Return the standard output.
-    return stdout;
+    return stdout.toString();
   }
 }
