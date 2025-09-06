@@ -35,14 +35,16 @@ export function customize(options: OrgSvelteCustomization = {}) {
         return list(
           a`setq`,
           a`org-svelte-component-import-alist`,
-          list(
-            ...Object.entries(cia).map(([k, v]) => {
-              if (Array.isArray(v)) {
-                return cons(k, list(...v));
-              } else {
-                return cons(k, v);
-              }
-            }),
+          quote(
+            list(
+              ...Object.entries(cia).map(([k, v]) => {
+                if (Array.isArray(v)) {
+                  return cons(k, list(...v));
+                } else {
+                  return cons(k, v);
+                }
+              }),
+            ),
           ),
         );
       }
@@ -52,7 +54,7 @@ export function customize(options: OrgSvelteCustomization = {}) {
         return list(
           a`setq`,
           a`org-svelte-metadata-export-list`,
-          list(...mel.map((v) => k`${v}`)),
+          quote(list(...mel.map((v) => k`${v}`))),
         );
       }
 
@@ -69,7 +71,9 @@ export function customize(options: OrgSvelteCustomization = {}) {
         return list(
           a`setq`,
           a`org-svelte-text-markup-alist`,
-          list(...Object.entries(tma).map(([key, val]) => cons(key, val))),
+          quote(
+            list(...Object.entries(tma).map(([key, val]) => cons(key, val))),
+          ),
         );
       }
 
