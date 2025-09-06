@@ -13,16 +13,32 @@ import {
   type OrgSvelteCustomization,
 } from "./org-svelte";
 
+/**
+ * Options for preprocessing Org documents to Svelte components.
+ *
+ * See the documentation for `ox` and `ox-svelte` for more details.
+ */
 export type OrgPreprocessOptions = Partial<{
+  /**
+   * List of file extensions to process as Org documents.
+   */
   extensions: string[];
+
+  /**
+   * List of glob patterns to locate Org files for updating ID locations.
+   */
   idLocations: string[];
+
+  /**
+   * List of extra S-expressions to evaluate during initialization.
+   */
   initSexps: Sexp[];
 }> &
   OrgExportCustomization &
   OrgSvelteCustomization;
 
 /**
- *
+ * Promise that resolves when initialization has been completed.
  */
 let initPromise: Promise<unknown> | undefined;
 
@@ -39,6 +55,7 @@ export function orgPreprocess(
     ...rest
   } = options || {};
 
+  // Create a new Emacs instance for this preprocessor.
   const emacs = new Emacs();
 
   // Initialization has not been run yet.
