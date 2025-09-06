@@ -20,13 +20,5 @@
   "packageManager": "pnpm@10.6.4",
   "engines": {
     "pnpm": "^10.6.4"
-  },
-  "pnpm": {
-    "overrides": {
-      "ox-svelte": "link:../ox-svelte"
-    }
-  },
-  "dependencies": {
-    "ox-svelte": "link:../ox-svelte"
   }
 }
