@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 
-import { a, k, cons, quote, list, stringify } from "./emacs.js";
+import { a, k, cons, quote, list, stringify, Emacs } from "./emacs";
 
 describe.concurrent("Emacs Lisp S-expression DSL", async () => {
   it("creates correct list", () => {
@@ -55,5 +55,26 @@ describe.concurrent("Emacs Lisp S-expression DSL", async () => {
 
   it("stringifies quoted list", () => {
     expect(stringify(quote(list(`a`, `b`, `c`)))).toBe(`'("a" "b" "c")`);
+  });
+});
+
+describe("Emacs instance", async () => {
+  const emacs = new Emacs();
+
+  it("prints hello world", async () => {
+    const result = await emacs.progn(list(a`princ`, `hello world`)).run();
+    expect(result).toBe("hello world");
+  });
+
+  it("echos what it receives via minibuffer", async () => {
+    const input = "test input";
+    const result = await emacs
+      .progn(
+        list(a`setq`, a`result`, list(a`read-string`, ``)),
+        list(a`princ`, a`result`),
+      )
+      .minibuffer(input)
+      .run();
+    expect(result).toBe("test input");
   });
 });
