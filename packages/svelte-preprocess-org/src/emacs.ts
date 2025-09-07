@@ -316,7 +316,7 @@ export class Emacs {
       },
     );
     if (error) {
-      throw error;
+      throw new Error(`Error running Emacs: ${stderr}`, { cause: error });
     }
 
     // Reset the S-expressions and stdin for the next run.

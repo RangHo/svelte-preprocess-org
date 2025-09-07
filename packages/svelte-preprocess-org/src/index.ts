@@ -87,7 +87,6 @@ export function orgPreprocess(
 
       // Make sure that ID location updates have been applied.
       const code = emacs
-        .progn(list(a`message`, `Processing...`))
         .require("ox-svelte", fullpath)
         .progn(customizeOx(rest))
         .progn(customizeOxSvelte(rest))
