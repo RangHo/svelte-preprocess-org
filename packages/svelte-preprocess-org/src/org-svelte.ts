@@ -1,5 +1,3 @@
-import { dirname, basename } from "ox-svelte";
-
 import { a, k, cons, list, quote, type Value } from "./emacs";
 import { toKebabCase } from "./utilities";
 
@@ -27,13 +25,15 @@ export type OrgSvelteCustomization = Partial<{
   verbose: boolean;
 }>;
 
+/**
+ * Generate Emacs Lisp code to customize the Org to Svelte export engine.
+ */
 export function customize(options: OrgSvelteCustomization = {}) {
-  const transformed = Object.entries(options).map(([key, val]) => {
+  const transformed = Object.entries(options).flatMap(([key, val]) => {
     switch (key) {
       case "componentImportAlist": {
         const cia = val as Record<string, string | string[] | null>;
-        return list(
-          a`setq`,
+        return [
           a`org-svelte-component-import-alist`,
           quote(
             list(
@@ -46,16 +46,15 @@ export function customize(options: OrgSvelteCustomization = {}) {
               }),
             ),
           ),
-        );
+        ];
       }
 
       case "metadataExportList": {
         const mel = val as string[];
-        return list(
-          a`setq`,
+        return [
           a`org-svelte-metadata-export-list`,
           quote(list(...mel.map((v) => k`${v}`))),
-        );
+        ];
       }
 
       case "textMarkupAlist": {
@@ -68,13 +67,12 @@ export function customize(options: OrgSvelteCustomization = {}) {
           | "verbatim",
           `${string}%s${string}`
         >;
-        return list(
-          a`setq`,
+        return [
           a`org-svelte-text-markup-alist`,
           quote(
             list(...Object.entries(tma).map(([key, val]) => cons(key, val))),
           ),
-        );
+        ];
       }
 
       case "anchorFormat":
@@ -87,14 +85,14 @@ export function customize(options: OrgSvelteCustomization = {}) {
       case "rawScriptContent":
       case "srcBlockFormat":
       case "verbose":
-        return list(a`setq`, a`org-svelte-${toKebabCase(key)}`, val as Value);
+        return [a`org-svelte-${toKebabCase(key)}`, val as Value];
 
       default:
-        return null;
+        return [];
     }
   });
 
-  return list(a`progn`, ...transformed);
+  return list(a`setq`, ...transformed);
 }
 
 /**

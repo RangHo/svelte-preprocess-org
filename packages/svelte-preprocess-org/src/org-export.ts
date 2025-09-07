@@ -1,4 +1,5 @@
-import { Emacs, a, list, quote, type Atom } from "./emacs";
+import { a, list, quote, type Atom, type Value } from "./emacs";
+import { toKebabCase } from "./utilities";
 
 /**
  * Customization options for Org export engine.
@@ -40,6 +41,56 @@ export type OrgExportCustomization = Partial<{
   withTables: boolean;
 }>;
 
+/**
+ * Generate Emacs Lisp code to customize the Org export engine.
+ */
 export function customize(options: OrgExportCustomization = {}) {
-  return list();
+  const transformed = Object.entries(options).flatMap(([key, val]) => {
+    switch (key) {
+      case "withProperties": {
+        return [
+          a`org-export-with-properties`,
+          Array.isArray(val) ? quote(list(...val)) : val,
+        ]
+      }
+     
+      case "withSmartQuotes":
+      case "withEmphasize":
+      case "withSpecialStrings":
+      case "withFixedWidth":
+      case "withTimestamps":
+      case "preserveBreaks":
+      case "withSubSuperscripts":
+      case "withArchivedTrees":
+      case "expandLinks":
+      case "withBrokenLinks":
+      case "withClocks":
+      case "withCreator":
+      case "withDrawers":
+      case "withDate":
+      case "withEntities":
+      case "withEmail":
+      case "withFootnotes":
+      case "headlineLevels":
+      case "withInlinetasks":
+      case "withSectionNumbers":
+      case "withPlanning":
+      case "withPriority":
+      case "withStatisticsCookies":
+      case "withTags":
+      case "withTasks":
+      case "withLatex":
+      case "timestampFile":
+      case "withTitle":
+      case "withToc":
+      case "todoKeywords":
+      case "withTables":
+        return [a`org-export-${toKebabCase(key)}`, val as Value];
+
+      default:
+        return [];
+    }
+  });
+
+  return list(a`setq`, ...transformed);
 }
