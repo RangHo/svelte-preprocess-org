@@ -1,6 +1,6 @@
 {
   "name": "svelte-preprocess-org",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "Svelte preprocessor for Org-mode documents",
   "author": "RangHo Lee <hello@rangho.me>",
   "homepage": "https://github.com/RangHo/svelte-preprocess-org",
