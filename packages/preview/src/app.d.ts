@@ -8,6 +8,7 @@ declare global {
     // interface PageState {}
     // interface Platform {}
   }
+
   declare module "*.org" {
     import type { OrgModule } from "ox-svelte";
 
