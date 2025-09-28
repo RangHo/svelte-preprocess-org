@@ -12,7 +12,7 @@ export type OrgSvelteCustomization = Partial<{
   componentImportAlist: Record<string, string | string[] | null>;
   metadataExportList: string[];
   imageFormat: `${string}%s${string}%s${string}`;
-  latexEnviromnetFormat: `${string}%s${string}`;
+  latexEnvironmentFormat: `${string}%s${string}`;
   latexDisplayFragmentFormat: `${string}%s${string}`;
   latexInlineFragmentFormat: `${string}%s${string}`;
   linkOrgFileAsSvelte: boolean;
@@ -78,7 +78,7 @@ export function customize(options: OrgSvelteCustomization = {}) {
       case "anchorFormat":
       case "brokenLinkFormat":
       case "imageFormat":
-      case "latexEnviromnetFormat":
+      case "latexEnvironmentFormat":
       case "latexDisplayFragmentFormat":
       case "latexInlineFragmentFormat":
       case "linkOrgFileAsSvelte":
