@@ -23,7 +23,7 @@ const config = {
   preprocess: [
     orgPreprocess({
       // Org preprocessor options
-jjj    }),
+    }),
     // ...other preprocessors
   ],
   // ...other configurations
