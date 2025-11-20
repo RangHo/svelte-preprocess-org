@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     ox-svelte:
-      specifier: 0.4.6
-      version: 0.4.6
+      specifier: 0.4.7
+      version: 0.4.7
     svelte:
       specifier: ^5.2.11
       version: 5.38.2
@@ -79,7 +79,7 @@ importers:
         version: 16.4.0
       ox-svelte:
         specifier: 'catalog:'
-        version: 0.4.6(svelte@5.41.4)
+        version: 0.4.7(svelte@5.41.4)
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -119,7 +119,7 @@ importers:
         version: 22.18.12
       ox-svelte:
         specifier: 'catalog:'
-        version: 0.4.6(svelte@5.38.2)
+        version: 0.4.7(svelte@5.38.2)
       svelte:
         specifier: 'catalog:'
         version: 5.38.2
@@ -1266,8 +1266,8 @@ packages:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
 
-  ox-svelte@0.4.6:
-    resolution: {integrity: sha512-gFBLHtN1drWP1T1OIUbhDMj8IShpD3Q/EvtqGpN6q4A+WKVpHgIPMCAtHpiRs675DaGbU8zH3k0+2WacvnIQ+Q==}
+  ox-svelte@0.4.7:
+    resolution: {integrity: sha512-w51HBA/TV0cnEBFzoqPeuIZzakp6IxWLvrOPk4owYOvvE38Q5/HUB0Ni4R91Wh58EqYC3OqwfUJzlPZZt7krCg==}
     peerDependencies:
       svelte: ^5.1.9
 
@@ -2694,13 +2694,13 @@ snapshots:
       type-check: 0.4.0
       word-wrap: 1.2.5
 
-  ox-svelte@0.4.6(svelte@5.38.2):
+  ox-svelte@0.4.7(svelte@5.38.2):
     dependencies:
       svelte: 5.38.2
     optionalDependencies:
       typescript: 5.9.3
 
-  ox-svelte@0.4.6(svelte@5.41.4):
+  ox-svelte@0.4.7(svelte@5.41.4):
     dependencies:
       svelte: 5.41.4
     optionalDependencies:

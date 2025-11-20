@@ -3,7 +3,7 @@ packages:
   - packages/preview
 
 catalog:
-  ox-svelte: 0.4.6
+  ox-svelte: 0.4.7
   svelte: ^5.2.11
 
 overrides:
