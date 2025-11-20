@@ -1,6 +1,21 @@
 import { spawnSync } from "node:child_process";
 
 /**
+ * Options for starting an Emacs intsance.
+ */
+export type EmacsCustomization = {
+  /**
+   * Directory to use as Emacs `user-emacs-directory`.
+   */
+  initDirectory: string;
+
+  /**
+   * Largest amount of data in bytes allowed on stdout or stderr.
+   */
+  maxBuffer: number;
+};
+
+/**
  * An S-expression.
  */
 export type Sexp = Value | Cell;
@@ -235,6 +250,16 @@ function stringifyList(list: Cell): string {
  */
 export class Emacs {
   /**
+   * Directory that will be used as the `user-emacs-directory`.
+   */
+  private initDirectory: string;
+
+  /**
+   * Largest amount of data in bytes allowed on stdout or stderr.
+   */
+  private maxBuffer: number;
+
+  /**
    * S-expression to evaluate when `run` method is called.
    */
   private sexps: Sexp[] = [];
@@ -242,7 +267,7 @@ export class Emacs {
   /**
    * String value to be piped into the standard input.
    */
-  private stdin: string;
+  private stdin: string = "";
 
   /**
    * Initialize a new Emacs instance.
@@ -250,10 +275,11 @@ export class Emacs {
    * Internally, this will request a temporary directory to be created, which
    * will be used as the Emacs init directory when `Emacs.run` is called.
    *
-    * @param initDirectory - Directory that will be used as the `user-emacs-directory`.
+   * @param initDirectory -
    */
-  constructor(private initDirectory: string) {
-    this.stdin = "";
+  constructor(opts: EmacsCustomization) {
+    this.initDirectory = opts.initDirectory;
+    this.maxBuffer = opts.maxBuffer;
   }
 
   /**
@@ -313,6 +339,7 @@ export class Emacs {
       ],
       {
         input: this.stdin,
+        maxBuffer: this.maxBuffer,
       },
     );
     if (error) {

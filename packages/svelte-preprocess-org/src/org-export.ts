@@ -51,9 +51,9 @@ export function customize(options: OrgExportCustomization = {}) {
         return [
           a`org-export-with-properties`,
           Array.isArray(val) ? quote(list(...val)) : val,
-        ]
+        ];
       }
-     
+
       case "withSmartQuotes":
       case "withEmphasize":
       case "withSpecialStrings":

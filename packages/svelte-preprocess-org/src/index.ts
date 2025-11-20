@@ -6,7 +6,14 @@ import fullpath from "ox-svelte";
 import type { PreprocessorGroup } from "svelte/compiler";
 import { globSync } from "tinyglobby";
 
-import { list, quote, a, Emacs, type Sexp } from "./emacs";
+import {
+  list,
+  quote,
+  a,
+  Emacs,
+  type Sexp,
+  type EmacsCustomization,
+} from "./emacs";
 import {
   customize as customizeOx,
   type OrgExportCustomization,
@@ -34,15 +41,11 @@ export type OrgPreprocessOptions = Partial<{
   idLocations: string[];
 
   /**
-   * Directory to use as Emacs `user-emacs-directory`.
-   */
-  initDirectory: string;
-
-  /**
    * List of extra S-expressions to evaluate during initialization.
    */
   initSexps: Sexp[];
 }> &
+  EmacsCustomization &
   OrgExportCustomization &
   OrgSvelteCustomization;
 
@@ -57,11 +60,15 @@ export function orgPreprocess(
     idLocations = [],
     initDirectory = mkdtempSync(join(tmpdir(), "svelte-preprocess-org-")),
     initSexps = [],
+    maxBuffer = 10 * 1024 * 1024, // 10 MiB
     ...rest
   } = options || {};
 
   // Create a new Emacs instance for this preprocessor.
-  const emacs = new Emacs(initDirectory);
+  const emacs = new Emacs({
+    initDirectory,
+    maxBuffer,
+  });
 
   if (initSexps.length > 0) {
     emacs.progn(...initSexps).run();
