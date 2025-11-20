@@ -12,7 +12,7 @@ const config = {
       },
       extensions: [".org"],
       idLocations: ["src/lib/orgs/*.org"],
-      initDirectory: "/tmp/svelte-preprocess-org",
+      initDirectory: ".emacs.d/",
       verbose: true,
     }),
     vitePreprocess(),
