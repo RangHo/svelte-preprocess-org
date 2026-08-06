@@ -1,4 +1,8 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 /**
  * Options for starting an Emacs intsance.
@@ -187,6 +191,17 @@ export function k(
 }
 
 /**
+ * Escape a string so it can be embedded as a Lisp string literal.
+ *
+ * Only the backslash and double-quote characters are special inside a Lisp
+ * string literal; everything else (including newlines, unicode, etc.) is
+ * passed through verbatim.
+ */
+function escapeLispString(s: string): string {
+  return s.replace(/[\\"]/g, (c) => `\\${c}`);
+}
+
+/**
  * Convert an S-expression to a string.
  */
 export function stringify(sexp: Sexp): string {
@@ -197,7 +212,7 @@ export function stringify(sexp: Sexp): string {
     case isNil(sexp):
       return "nil";
     case isString(sexp):
-      return `"${sexp}"`;
+      return `"${escapeLispString(sexp)}"`;
     case isNumber(sexp):
       return sexp.toString();
     case isBoolean(sexp):
@@ -241,12 +256,90 @@ function stringifyList(list: Cell): string {
 }
 
 /**
+ * Undo the outer Lisp string-literal quoting that `emacsclient --eval`
+ * wraps its reply in (e.g. `"hello \"world\""` -> `hello "world"`).
+ *
+ * This only reverses `\\` and `\"`, which is all that's needed here: the
+ * payload is always JSON text (see `run()`), so it never contains a raw
+ * control character for Emacs to escape some other way.
+ */
+function unwrapLispString(printed: string): string {
+  const trimmed = printed.trim();
+  if (!trimmed.startsWith('"') || !trimmed.endsWith('"')) {
+    throw new Error(
+      `Expected Emacs to return a Lisp string, but got: ${printed}`,
+    );
+  }
+
+  const body = trimmed.slice(1, -1);
+  let result = "";
+  for (let i = 0; i < body.length; i++) {
+    if (body[i] === "\\" && i + 1 < body.length) {
+      result += body[++i];
+    } else {
+      result += body[i];
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Parse the result of an `emacsclient --eval` call whose return value was
+ * produced by `(json-serialize (list :result STRING))` (see `run()`).
+ *
+ * Going through JSON (rather than trying to parse Emacs's own `prin1`/`pp`
+ * escaping directly) sidesteps a subtlety: `emacsclient`'s reply channel is
+ * line-oriented, so the server forces embedded newlines (and possibly other
+ * control characters) in the *returned* string to be escaped for transport
+ * -- this happens regardless of `print-escape-newlines` and friends, since
+ * it's a wire-protocol necessity rather than an ordinary `prin1` setting.
+ * Encoding the payload as JSON first means the only characters the outer
+ * Lisp layer ever needs to escape are `"` and `\`, which `unwrapLispString`
+ * already handles, and `JSON.parse` reliably handles everything else
+ * (newlines, unicode, control characters, ...).
+ */
+function parseEmacsClientResult(printed: string): string {
+  const json = unwrapLispString(printed);
+  return (JSON.parse(json) as { result: string }).result;
+}
+
+/**
+ * Pause execution synchronously for the given number of milliseconds.
+ *
+ * Used while polling for the Emacs daemon socket to become available,
+ * without needing to make the whole `Emacs` API asynchronous.
+ */
+function sleepSync(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * The dynamically-scoped Lisp variable that the Org document content is
+ * made available through while a `run()` call is being evaluated.
+ *
+ * The file it points to is written and cleaned up per-call by `Emacs.run`.
+ */
+export const inputFileVariable = a`svelte-preprocess-org--input-file`;
+
+/**
  * An Emacs instance for evaluating S-expressions.
  *
- * Since each Emacs instance constructetd from this class is assigned their own
- * temporary directory as their init directory, any persistent state that needs
- * to be preserved between evaluations can be stored in that directory (e.g. in
- * the .eld files).
+ * Rather than spawning a fresh `emacs --batch` process (and reloading Org,
+ * `ox`, `ox-svelte`, etc. from scratch) for every call, this class starts a
+ * single Emacs daemon lazily on first use and reuses it for every
+ * subsequent `run()` call by talking to it through `emacsclient`. Since
+ * each Emacs instance constructed from this class is assigned its own
+ * temporary directory as its init directory, any persistent state that
+ * needs to be preserved between evaluations can be stored in that
+ * directory (e.g. in the .eld files).
+ *
+ * The daemon is intentionally spawned with its stdio ignored and
+ * `unref()`'d, and is killed when this process exits. Without that, the
+ * daemon's open stdio pipes keep Node's event loop alive, which is
+ * harmless for a long-lived dev server but means a one-shot process (e.g.
+ * `vite build`) would hang forever waiting for a daemon nobody asked it to
+ * wait for.
  */
 export class Emacs {
   /**
@@ -260,6 +353,28 @@ export class Emacs {
   private maxBuffer: number;
 
   /**
+   * Unique `emacsclient`/`emacs --fg-daemon` socket name for this instance,
+   * so multiple preprocessor instances (e.g. concurrent projects) never
+   * collide on the same socket.
+   */
+  private socketName: string;
+
+  /**
+   * The running daemon child process, if any.
+   */
+  private daemonProcess: ChildProcess | null = null;
+
+  /**
+   * Whether the daemon has been confirmed reachable via `emacsclient`.
+   */
+  private daemonReady = false;
+
+  /**
+   * Whether the process-exit cleanup handler has already been registered.
+   */
+  private exitHandlerRegistered = false;
+
+  /**
    * S-expression to evaluate when `run` method is called.
    */
   private sexps: Sexp[] = [];
@@ -270,16 +385,32 @@ export class Emacs {
   private stdin: string = "";
 
   /**
+   * How many times to poll `emacsclient` while waiting for the daemon to
+   * finish starting up.
+   */
+  private static readonly MAX_CONNECT_ATTEMPTS = 40;
+
+  /**
+   * Delay between connection attempts while waiting for the daemon, in
+   * milliseconds.
+   */
+  private static readonly CONNECT_RETRY_DELAY_MS = 250;
+
+  /**
    * Initialize a new Emacs instance.
    *
-   * Internally, this will request a temporary directory to be created, which
-   * will be used as the Emacs init directory when `Emacs.run` is called.
+   * This does not start the daemon yet; it is started lazily on the first
+   * `run()` call. `opts` is optional and defaults match `orgPreprocess`'s
+   * own defaults (see `index.ts`).
    *
-   * @param initDirectory -
+   * @param opts -
    */
-  constructor(opts: EmacsCustomization) {
-    this.initDirectory = opts.initDirectory;
-    this.maxBuffer = opts.maxBuffer;
+  constructor(opts?: Partial<EmacsCustomization>) {
+    this.initDirectory =
+      opts?.initDirectory ??
+      mkdtempSync(join(tmpdir(), "svelte-preprocess-org-"));
+    this.maxBuffer = opts?.maxBuffer ?? 10 * 1024 * 1024; // 10 MiB
+    this.socketName = `svelte-preprocess-org-${randomUUID()}`;
   }
 
   /**
@@ -323,34 +454,175 @@ export class Emacs {
   }
 
   /**
-   * Run the registered S-expressions in Emacs.
-   *
-   * @rehturns The standard output of the Emacs process.
+   * Spawn the Emacs daemon if it is not already running.
    */
-  run() {
-    // Spawn Emacs in batch mode to evaluate the S-expressions.
-    const { stdout, stderr, error } = spawnSync(
-      "emacs",
-      [
-        `--init-directory=${this.initDirectory}`,
-        "--batch",
-        "--eval",
-        stringify(list(a`progn`, ...this.sexps)),
-      ],
-      {
-        input: this.stdin,
-        maxBuffer: this.maxBuffer,
-      },
-    );
-    if (error) {
-      throw new Error(`Error running Emacs: ${stderr}`, { cause: error });
+  private ensureDaemon(): void {
+    if (this.daemonProcess && this.daemonProcess.exitCode === null) {
+      return;
     }
 
-    // Reset the S-expressions and stdin for the next run.
-    this.sexps = [];
-    this.stdin = "";
+    const daemon = spawn(
+      "emacs",
+      [
+        `--fg-daemon=${this.socketName}`,
+        `--init-directory=${this.initDirectory}`,
+      ],
+      {
+        // Ignore stdio and unref the child so a lingering daemon never
+        // keeps a one-shot process (e.g. `vite build`) from exiting.
+        stdio: "ignore",
+      },
+    );
+    daemon.unref();
 
-    // Return the standard output.
-    return stdout.toString();
+    this.daemonProcess = daemon;
+    this.daemonReady = false;
+
+    if (!this.exitHandlerRegistered) {
+      this.exitHandlerRegistered = true;
+
+      // Covers process.exit() and the event loop draining naturally
+      // (e.g. a one-shot `vite build` finishing).
+      process.once("exit", () => this.shutdown());
+
+      // 'exit' alone isn't reliably emitted for signal-terminated
+      // processes unless something is listening for the signal itself
+      // (e.g. Ctrl-C, or a CI job being cancelled with SIGTERM). Handle
+      // those explicitly, then re-raise the signal so the process still
+      // exits with its conventional signal-based exit code.
+      for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
+        process.once(signal, () => {
+          this.shutdown();
+          process.kill(process.pid, signal);
+        });
+      }
+    }
+  }
+
+  /**
+   * Make sure the daemon is running and reachable via `emacsclient`,
+   * blocking (synchronously) until it is or until we give up.
+   */
+  private ensureDaemonReady(): void {
+    if (this.daemonReady) {
+      return;
+    }
+
+    this.ensureDaemon();
+
+    for (let attempt = 0; attempt < Emacs.MAX_CONNECT_ATTEMPTS; attempt++) {
+      const { status, error } = spawnSync("emacsclient", [
+        `--socket-name=${this.socketName}`,
+        "--eval",
+        "t",
+      ]);
+
+      if (!error && status === 0) {
+        this.daemonReady = true;
+        return;
+      }
+
+      sleepSync(Emacs.CONNECT_RETRY_DELAY_MS);
+    }
+
+    throw new Error(
+      `Timed out waiting for the Emacs daemon (socket "${this.socketName}") to start.`,
+    );
+  }
+
+  /**
+   * Kill the Emacs daemon, if it is running.
+   *
+   * This is called automatically when the current process exits, but can
+   * also be called manually (e.g. in tests) to tear it down earlier.
+   */
+  shutdown(): void {
+    if (this.daemonProcess && this.daemonProcess.exitCode === null) {
+      this.daemonProcess.kill();
+    }
+    this.daemonProcess = null;
+    this.daemonReady = false;
+  }
+
+  /**
+   * Run the registered S-expressions in Emacs.
+   *
+   * @returns The standard output of the Emacs process.
+   */
+  run(): string {
+    this.ensureDaemonReady();
+
+    // Content can't be streamed over stdin to a running daemon the way it
+    // can be to a fresh `emacs --batch` process, so it is handed off
+    // through a scratch file instead, and made available to the
+    // S-expressions via `inputFileVariable`.
+    const scratchDirectory = mkdtempSync(
+      join(tmpdir(), "svelte-preprocess-org-io-"),
+    );
+
+    try {
+      const inputFile = join(scratchDirectory, "input");
+      writeFileSync(inputFile, this.stdin);
+
+      // Similarly, `princ`/`prin1`/etc. output can't be captured off a
+      // daemon's stdout, since evaluation happens in a process that was
+      // already running. Instead, `standard-output` is rebound to a
+      // throwaway buffer for the duration of the evaluation, and that
+      // buffer's contents become the return value of the whole form,
+      // which `emacsclient --eval` prints back to us as a Lisp string.
+      const form = list(
+        a`let`,
+        list(
+          list(inputFileVariable, inputFile),
+          list(
+            a`standard-output`,
+            list(a`generate-new-buffer`, ` *svelte-preprocess-org-output*`),
+          ),
+        ),
+        list(
+          a`unwind-protect`,
+          list(
+            a`progn`,
+            ...this.sexps,
+            // See `parseEmacsClientResult` for why the result is wrapped
+            // in JSON rather than returned as a plain string.
+            list(
+              a`json-serialize`,
+              list(
+                a`list`,
+                k`result`,
+                list(
+                  a`with-current-buffer`,
+                  a`standard-output`,
+                  list(a`buffer-string`),
+                ),
+              ),
+            ),
+          ),
+          list(a`kill-buffer`, a`standard-output`),
+        ),
+      );
+
+      const { stdout, stderr, status, error } = spawnSync(
+        "emacsclient",
+        [`--socket-name=${this.socketName}`, "--eval", stringify(form)],
+        { maxBuffer: this.maxBuffer },
+      );
+
+      if (error || status !== 0) {
+        // The daemon may have died or otherwise become unreachable; make
+        // sure the next call restarts it instead of retrying forever.
+        this.daemonReady = false;
+        throw new Error(`Error running Emacs: ${stderr}`, { cause: error });
+      }
+
+      // Reset the S-expressions and stdin for the next run.
+      this.sexps = [];
+      this.stdin = "";
+
+      return parseEmacsClientResult(stdout.toString());
+    } finally {
+      rmSync(scratchDirectory, { recursive: true, force: true });
+    }
   }
 }
