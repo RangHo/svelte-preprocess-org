@@ -71,9 +71,11 @@ describe("Emacs instance", async () => {
   const emacs = new Emacs();
 
   it("prints hello world", async () => {
+    // First call pays for starting the Emacs daemon, which can take
+    // longer than vitest's default per-test timeout.
     const result = await emacs.progn(list(a`princ`, `hello world`)).run();
     expect(result).toBe("hello world");
-  });
+  }, 15000);
 
   it("echos what it receives via minibuffer", async () => {
     const input = "test input";
