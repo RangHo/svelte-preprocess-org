@@ -1,4 +1,12 @@
-import { a, k, cons, list, quote, type Value } from "./emacs";
+import {
+  a,
+  inputFileVariable,
+  k,
+  cons,
+  list,
+  quote,
+  type Value,
+} from "./emacs";
 import { toKebabCase } from "./utilities";
 
 /**
@@ -98,30 +106,16 @@ export function customize(options: OrgSvelteCustomization = {}) {
 /**
  * Export an Org document as Svelte code.
  *
- * Note: This function expects the content of the Org document to be provided
- * via minibuffer input (i.e., stdin).
+ * Note: This function expects the content of the Org document to be
+ * available via `inputFileVariable` (see `emacs.ts`), which `Emacs.run()`
+ * binds to a scratch file holding whatever was passed to `minibuffer()`.
  *
- * @param options Customization options for the export.
  * @returns The generated Svelte component as a string.
  */
 export const exportMinibufferAsSvelte = list(
-  a`let`,
-  // VARLIST
-  list(list(a`content`, ``)),
-  // BODY
-  list(
-    a`while`,
-    // TEST
-    list(a`setq`, a`line`, list(a`ignore-errors`, list(a`read-string`, ``))),
-    // BODY
-    list(a`setq`, a`content`, list(a`concat`, a`content`, `\\n`, a`line`)),
-  ),
-  // Create temporary buffer, insert, and export.
-  list(
-    a`with-temp-buffer`,
-    list(a`org-mode`),
-    list(a`insert`, a`content`),
-    list(a`org-svelte-export-as-svelte`),
-    list(a`princ`, list(a`buffer-string`)),
-  ),
+  a`with-temp-buffer`,
+  list(a`org-mode`),
+  list(a`insert-file-contents`, inputFileVariable),
+  list(a`org-svelte-export-as-svelte`),
+  list(a`princ`, list(a`buffer-string`)),
 );

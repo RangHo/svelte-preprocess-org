@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest";
 
-import { a, k, cons, quote, list, stringify, Emacs } from "./emacs";
+import {
+  a,
+  k,
+  cons,
+  quote,
+  list,
+  stringify,
+  Emacs,
+  inputFileVariable,
+} from "./emacs";
 
 describe.concurrent("Emacs Lisp S-expression DSL", async () => {
   it("creates correct list", () => {
@@ -62,16 +71,21 @@ describe("Emacs instance", async () => {
   const emacs = new Emacs();
 
   it("prints hello world", async () => {
+    // First call pays for starting the Emacs daemon, which can take
+    // longer than vitest's default per-test timeout.
     const result = await emacs.progn(list(a`princ`, `hello world`)).run();
     expect(result).toBe("hello world");
-  });
+  }, 15000);
 
   it("echos what it receives via minibuffer", async () => {
     const input = "test input";
     const result = await emacs
       .progn(
-        list(a`setq`, a`result`, list(a`read-string`, ``)),
-        list(a`princ`, a`result`),
+        list(
+          a`with-temp-buffer`,
+          list(a`insert-file-contents`, inputFileVariable),
+          list(a`princ`, list(a`buffer-string`)),
+        ),
       )
       .minibuffer(input)
       .run();
